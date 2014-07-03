@@ -58,9 +58,9 @@ for (tax in taxNames) {
   total <- nrow(taxData)
   
   #count h and g samples (totals but only considering populations -unique coordinates)
-  hc_u <- nrow(unique(hData))
-  gc_u <- nrow(unique(gData))
-  total_u <- nrow(unique(allData))
+  hc_u <- nrow(unique(hData)[complete.cases(unique(hData)),]) # New addition
+  gc_u <- nrow(unique(gData)[complete.cases(unique(gData)),]) # New addition
+  total_u <- nrow(unique(allData)[complete.cases(unique(allData)),]) # New addition
   
   row_out <- data.frame(TAXON=paste(tax),HNUM=hc,GNUM=gc,HNUM_RP=hc_u,GNUM_RP=gc_u,TOTAL_RP=total_u)
   
