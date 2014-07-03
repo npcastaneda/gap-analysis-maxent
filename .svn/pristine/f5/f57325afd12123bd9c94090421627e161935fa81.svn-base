@@ -1,0 +1,45 @@
+# Selecting taxa occurrences within native areas
+# Harold Achicanoy - Nora Castaneda
+# 25 - 06 - 2013
+
+require(sp)
+require(maptools)
+
+OccFilterNArea <- function (crop_dir) {
+  occDir = paste(crop_dir, "/occurrence_files", sep="")
+  outDir = paste(crop_dir, "/occurrence_files_narea", sep=""); if (!file.exists(outDir)) {dir.create(outDir)}
+  naDir = paste(crop_dir, "/biomod_modeling/native-areas/polyshps", sep="")
+  
+  # The process
+  spList <- list.files(path=occDir,recursive=T,pattern=".csv")
+  for(sp in spList){
+    spName = unlist(strsplit(sp,"[.]"))[1]
+    cat("Loading", spName, "occurrences \n")
+    occ = read.csv(paste(occDir,"/",sp,sep=""))
+    xy = cbind(occ$lon, occ$lat)
+    occ = SpatialPoints(xy)
+    cat("Loading", spName, "native areas \n")
+    narea = paste(naDir, "/", spName, "/narea.shp", sep="")
+    if(!file.exists(narea)){
+      occ = as.data.frame(occ)
+      names(occ) = c("lon","lat")
+      write.csv(occ, paste(outDir, "/", sp, sep=""), row.names=FALSE)
+    }else{
+      narea = readShapeSpatial(narea)
+      cat ("Projecting files \n")
+      proj4string(occ) = CRS("+proj=longlat +datum=WGS84")
+      proj4string(narea) = CRS("+proj=longlat +datum=WGS84")
+      cat("Selecting occurrences within native area \n")
+      x <- over(narea, occ)
+      x <- sum(x)
+      if(is.na(x)){
+        cat("No points within native area \n")
+      } else {
+        occ = occ[narea]
+        occ = as.data.frame(occ)
+        names(occ) = c("lon","lat")
+        write.csv(occ, paste(outDir, "/", sp, sep=""), row.names=FALSE)
+      }
+    }
+  }
+}

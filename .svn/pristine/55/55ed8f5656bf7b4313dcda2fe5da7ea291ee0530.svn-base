@@ -1,0 +1,74 @@
+#Creating maps and figures from the gap analysis
+#March 2013
+
+library(raster); library(maptools); data(wrld_simpl)
+
+source(paste(src.dir,"/000.zipRead.R",sep=""))
+
+### Species richness map
+sp_rich_dir <- paste(crop_dir,"/species_richness",sep="")
+sp_rich <- zipRead(sp_rich_dir, "species-richness.asc.gz")
+
+cols = colorRampPalette(c("gray87", "dark green","yellow","orange","red"))(255) # LOVE IT!!!
+z <- extent(sp_rich)
+aspect <- (z@ymax-z@ymin)*1.4/(z@xmax-z@xmin)
+
+tiff("./figures/spp_richness.tif",
+     res=300,pointsize=5,width=1500,height=1500*aspect,units="px",compression="lzw")
+plot(sp_rich, col=cols, useRaster=T, 
+     main="Species richness",
+     horizontal=T,
+     legend.width=1,
+     legend.shrink=0.99)
+plot(wrld_simpl,add=T,lwd=0.5, border="azure4")
+grid()
+dev.off()
+
+### Gap richness map
+priorityLevels <- c("HPS","MPS","LPS","NFCR")
+for(p in priorityLevels){
+  gap_dir <- paste(crop_dir, "/gap_richness/", p, sep="")
+  if(!file.exists(paste(gap_dir,"/gap-richness.asc.gz",sep=""))){
+    cat("No raster file available for category:",p,"\n")
+  }else{
+    gap_ras <- zipRead(gap_dir,"gap-richness.asc.gz")
+    
+    cols = colorRampPalette(c("gray87", "dark green","yellow","orange","red"))(255) # LOVE IT!!!
+    z <- extent(gap_ras)
+    aspect <- (z@ymax-z@ymin)*1.4/(z@xmax-z@xmin)
+    
+    tiff(paste("./figures/gap_richness_",p,".tif",sep=""),
+         res=300,pointsize=5,width=1500,height=1500*aspect,units="px",compression="lzw")
+    plot(gap_ras, col=cols, useRaster=T, 
+         main=paste(p,"gap richness",sep=" "),
+         horizontal=T,
+         legend.width=1,
+         legend.shrink=0.99)
+    plot(wrld_simpl,add=T,lwd=0.5, border="azure4")
+    grid()
+    dev.off() 
+  }
+}
+
+### Plot the CA50 vs Potential coverage
+
+prior <- read.csv(paste(crop_dir,"/maxent_modeling/summary-files/areas.csv",sep=""))
+#fit <- lm(prior$CA50_G~prior$PD_COV)
+fit <- lm(prior$GBSize~prior$DRSize)
+#lims <- c(min(prior$PD_COV,prior$CA50_G),max(prior$CA50_G,prior$PD_COV))/1000
+lims <- c(min(prior$DRSize,prior$GBSize),max(prior$GBSize,prior$DRSize))/1000
+
+#do the plot
+tiff(paste(crop_dir,"/figures/geographic_coverage.tif",sep=""),
+     res=300,pointsize=12,width=1500,height=1000,units="px",compression="lzw")
+
+par(mar=c(5,5,1,1),cex=0.8)
+plot(prior$DRSize/1000,prior$GBSize/1000,pch=20,cex=0.75,col="red",xlim=lims,ylim=c(0,1000),
+     xlab="Potential geographic coverage (sq-km * 1000)",
+     ylab="Genebank accessions CA50 (sq-km * 1000")
+
+abline(0,1,lwd=0.75,lty=2)
+lines(prior$DRSize/1000,fit$fitted.values/1000)
+grid(lwd=0.75)
+
+dev.off()

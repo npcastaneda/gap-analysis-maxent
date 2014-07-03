@@ -1,0 +1,85 @@
+##################################################
+## PCA + graphs                                 ##
+## Author: N. Castaneda                         ##
+## Date: 2012-07-06                             ##
+## Comments: this version calculates the PCA per##
+## genepool! (good version)                     ##
+##################################################
+
+require(adehabitat)
+
+kernelDensity <- function(inDir, outDir){
+  
+  input <- occurrences_swd_ok_kernel.csv
+  
+}
+
+crop_dir <- "C:/Users/ncp148/Downloads/test"
+setwd(crop_dir)
+
+#------------------------------------------------------
+# Preparing data (removing columns lat, lon and Taxon)
+#------------------------------------------------------
+taxfield <- "Taxon"
+data.pca <- read.csv("./swd/occurrences_swd_ok.csv")
+
+# Saving taxfield
+tax <- data.pca[,taxfield]
+
+# Cleaning data
+data.pca$lat <- NULL  
+data.pca$lon <- NULL
+data.pca[,taxfield] <- NULL
+
+#------------------------------------------------------
+# PCA - using singular value decomposition (SVD)
+#------------------------------------------------------
+# !!!!TO DO!!!!: include conditional for cases where PCA can't be calculated
+
+prc <- prcomp(data.pca, center=TRUE, scale=TRUE)  
+
+# Get the scores
+pca.scores <- (prc$x)
+pca.scores <- as.data.frame(pca.scores)
+
+# Add column with taxa name
+pca.scores <- cbind(Taxon=tax, pca.scores)
+
+# Saving the files  
+pca.dir <- "./pca_scores"
+if (!file.exists(pca.dir)) {dir.create(pca.dir)}
+write.csv(pca.scores, "./pca_scores/pca_scores.csv", quote=F, row.names=F)
+
+#------------------------------------------------------
+# Prepare data for graphs
+#------------------------------------------------------
+# http://genetic-codes.blogspot.co.uk/2010/05/kernel-density-plots.html
+scores <- read.csv("./pca_scores/pca_scores.csv")
+xy <- scores[,c("PC1","PC2")]
+id <- scores[,c("Taxon")]
+colours <- rainbow(length(unique(id)))
+means <- aggregate(xy, list(id), mean)
+
+## Run the kernel density analysis, this uses the least-square cross-validation (LSCV) 
+## and 70% threshhold
+hr <- kernelUD(xy, id, h="href")
+ver <- getverticeshr(hr, 70)
+
+layout(cbind(1, 2), width=c(8, 3))  # put legend on bottom 1/8th of the chart
+par(xpd=FALSE)
+#par(mfrow=c(1,2))
+par(mar=c(2.5,2.5,1,1),cex=0.8,lwd=1)
+#par(mar=c(0,0,0,0))
+plot(ver, colborder=colours, colpol="NA", sub="", lwd=2.5,
+     xlab="PC 1", ylab="PC 2", cex.axis=0.8)
+
+abline(h=0,lty=2,col="grey")
+abline(v=0,lty=2,col="grey")
+
+plot.new()
+#legend(2.8,0, names(ver),lty=c(1,1),lwd=c(2,2),col=colours,cex=0.5)
+par(xpd=TRUE)
+#par(mar=c(1, 1, 1, 1)+0.1, xpd=TRUE)
+#par(mar=c(2.5,2.5,1,1),cex=0.8,lwd=1)
+#legend(21,10, names(ver),lty=c(1,1),lwd=c(2,2),col=colours,cex=0.5)
+legend("topright", names(ver),lty=c(1,1),lwd=c(2,2), col=colours, cex=0.6)

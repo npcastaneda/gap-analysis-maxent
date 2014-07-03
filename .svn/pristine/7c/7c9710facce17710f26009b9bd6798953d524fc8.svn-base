@@ -1,0 +1,177 @@
+# Prepare gap files per species, only using data within native areas
+require(rgdal)
+require(raster)
+
+source(paste(src.dir,"/000.zipRead.R",sep=""))
+source(paste(src.dir,"/000.zipWrite.R",sep=""))
+# source(paste(src.dir,"/000.bufferPoints.R",sep=""))
+
+#For taxa with invalid models use the Hsamples buffer, if hsamples do not exist 
+
+gapRaster <- function(bdir) {
+  
+  idir <- paste(bdir, "/maxent_modeling", sep="")
+  ddir <- paste(bdir, "/samples_calculations", sep="")
+  gdir <- paste(bdir, "/gap_spp",sep="")
+  naDir <- paste(bdir, "/biomod_modeling/native-areas/polyshps", sep="") #Now restrict data to known native areas
+  
+  if(file.exists(gdir)){unlink(gdir, recursive=T)} #Erasing previous existing files
+  dir.create(gdir)
+  
+  priorityLevel <- c("HPS","MPS","LPS","NFCR")
+  
+  for(p in priorityLevel){
+    outFolder <- paste(gdir, "/", p, sep="")
+    if (!file.exists(outFolder)) {dir.create(outFolder)}
+    
+    spList <- read.csv(paste(bdir, "/priorities/priorities.csv", sep=""))
+    
+    names(spList)[1]="TAXON"
+    spList <- spList[which(spList$FPCAT == p),]
+    
+    cat("\n")
+    cat("Processing", nrow(spList), p, "\n")
+    
+    if(nrow(spList) != 0){
+      allOcc <- read.csv(paste(bdir, "/occurrences/",crop,".csv", sep=""))
+      
+      sppC <- 1
+      rcount <- 1
+      scount <- 1
+      
+      for (spp in spList$TAXON) {
+        
+        cat("Processing taxon", paste(spp), "\n")
+        
+        names(spList)[1]="TAXON"
+        isValid <- spList$IS_VALID[which(spList$TAXON == paste(spp))]
+        
+        sppFolder <- paste(idir, "/models/", spp, sep="")
+        projFolder <- paste(sppFolder, "/projections", sep="")
+        spOutFolder <- paste(ddir, "/", spp, sep="")
+        
+        #Calling herbarium samples CA50
+        cat("Using h-samples buffer \n")
+        tallOcc <- allOcc[which(allOcc$Taxon == paste(spp)),]
+#         hOcc <- tallOcc[which(tallOcc$H == 1),]
+        hOcc <- paste(spOutFolder,"/hsamples.csv",sep="")
+#         if (nrow(hOcc) != 0) {
+#           spOutFolder <- paste(ddir, "/", spp, sep="")
+#           grd <- zipRead(spOutFolder, "hsamples-buffer.asc.gz")
+#         } 
+        if(file.exists(hOcc)){
+          grd <- zipRead(spOutFolder, "hsamples-buffer.asc.gz")
+        }
+        
+        hbuffFile <- paste(spOutFolder, "/hsamples-buffer.asc.gz", sep="")
+        
+        #Calling genebank accessions CA50
+        cat("Using g-samples buffer \n")
+#         gOcc <- tallOcc[which(tallOcc$G == 1),]
+        gOcc <- paste(spOutFolder,"/gsamples.csv",sep="")
+#         if (nrow(gOcc) != 0) {
+#           grd.ga <- zipRead(spOutFolder, "gsamples-buffer.asc.gz")
+#         }
+        if(file.exists(gOcc)){
+          grd <- zipRead(spOutFolder, "gsamples-buffer.asc.gz")
+        }
+        
+        gbuffFile <- paste(spOutFolder, "/gsamples-buffer.asc.gz", sep="")
+        
+        #Presence absence surfaces
+        if (isValid == 1) {
+          cat("Presence/absence surf. exists, using it \n")
+          pagrid <- paste(spp, "_worldclim2_5_EMN_PA.asc.gz", sep="")
+          pagrid <- zipRead(projFolder, pagrid)
+          
+          if (file.exists(gbuffFile)) {
+            pagrid[which(grd.ga[] == 1)] <- 0
+          }
+          
+          if(sum(pagrid[], na.rm=T)==0){
+            cat("No mapable gap for", spp, "\n")
+          }else{
+            #               assign(paste("dpgrid",sppC,sep=""), zipRead(spOutFolder, "pop-dist.asc.gz"))
+            #               assign(paste("dpgrid",sppC,sep=""), get(paste("dpgrid",sppC,sep="")) * pagrid)
+            
+            cat("Writing", spp, "raster gap \n")
+            #writeRaster(pagrid, paste(outFolder,"/",spp,".asc",sep=""), overwrite=TRUE)
+            zipWrite(pagrid, outFolder, paste(spp,".asc.gz",sep=""))
+          }
+          
+        } else if (file.exists(hbuffFile)) {
+          cat("Presence/absence surf. does not exist or is not reliable, using hsamples instead \n")
+          pagrid <- grd
+          
+          if (file.exists(gbuffFile)) {
+            pagrid[which(grd.ga[] == 1)] <- 0
+          }
+          
+          if(sum(pagrid[], na.rm=T)==0){
+            cat("No mapable gap for", spp, "\n")
+          }else{
+            #               assign(paste("dpgrid",sppC,sep=""), zipRead(spOutFolder, "pop-dist.asc.gz"))
+            #               assign(paste("dpgrid",sppC,sep=""), get(paste("dpgrid",sppC,sep="")) * pagrid)
+            
+            cat("Writing", spp, "raster gap \n")
+            #writeRaster(pagrid, paste(outFolder,"/",spp,".asc",sep=""), overwrite=TRUE)
+            zipWrite(pagrid, outFolder, paste(spp,".asc.gz",sep=""))
+          }
+          
+        } else {
+          cat("No PA surface, no HSamples, cannot map it out \n")
+        }
+        
+        sppC <- sppC + 1
+      }
+      
+    }else{
+      cat("No taxa under this prioritization category \n")
+    }
+  }
+}
+
+#-----------------------------------------------------------------------
+# Wrapping function
+#-----------------------------------------------------------------------
+
+gapRichness <- function(bdir){
+  
+  outdir <- paste(bdir, "/gap_richness", sep="")
+  #Creating the directories
+  if (!file.exists(outdir)) {dir.create(outdir)}
+  
+  #Creating individual gap raster files
+  res <- gapRaster(bdir)
+  
+  priorityLevel <- c("HPS","MPS","LPS","NFCR")
+  for(p in priorityLevel){
+    gapdir <- paste(bdir, "/gap_spp/", p, sep="")
+    odir <- paste(bdir, "/gap_richness/", p, sep="")
+    if (!file.exists(odir)) {dir.create(odir)}
+    
+    #Creating the gap richness file
+    gapList <- list.files(gapdir,pattern="asc.gz")
+    if(length(gapList)==0){
+      cat("No raster files available for this category:", p, "\n")
+    }else if(length(gapList)==1){
+      gap_spp <- gapList[[1]]
+      gap_rich <- zipRead(gapdir,gap_spp)
+      
+      cat("Writing the gap richness raster for", p, "\n")
+      zipWrite(gap_rich, odir, "gap-richness.asc.gz") 
+    }else{
+      gap_spp <- gapList[[1]]
+      gap_rich <- zipRead(gapdir,gap_spp)
+      
+      for(i in 2:length(gapList)){
+        gap_spp <- gapList[[i]]
+        gap_spp <- zipRead(gapdir,gap_spp)
+        gap_rich <- gap_rich + gap_spp
+      }
+      
+      cat("Writing the gap richness raster for", p, "\n")
+      zipWrite(gap_rich, odir, "gap-richness.asc.gz")  
+    }
+  } 
+}

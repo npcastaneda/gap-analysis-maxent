@@ -1,0 +1,36 @@
+##################################################
+## Extract bioclim variables and save as asc    ##
+## Author: N. Castaneda                         ##
+## Date: 2012-07-09                             ##
+##################################################
+
+require(raster)
+
+maskVariables <- function(crop_dir, env_dir){
+  
+  out_dir <- paste(crop_dir,"/biomod_modeling/current-clim",sep="")
+  if (!file.exists(out_dir)) {dir.create(out_dir)}
+  
+  msk <- raster(paste(crop_dir,"/masks/mask.asc",sep=""))
+  e <- extent(msk)
+  
+  for(i in 1:19){
+    cat("Reading environmental layer", i, "\n")
+    rs <- raster(paste(env_dir, "/bio_", i, ".asc",sep=""))
+    rs <- crop(rs,e)
+    writeRaster(rs, paste(out_dir,"/bio_",i,".asc",sep=""), overwrite=T)    
+  }
+  # crop pca_reclass files
+  for(i in 1:2){
+    cat("Reading pca reclass",i,"\n")
+    rs <- raster(paste(env_dir,"/pca_result_raw/pc_",i,".asc",sep=""))
+    rs <- crop(rs,e)
+    
+    out_dir_pca <- paste(out_dir,"/pca_result_raw",sep="")
+    if (!file.exists(out_dir_pca)) {dir.create(out_dir_pca)}
+
+    writeRaster(rs,paste(out_dir_pca, "/pc_",i,".asc",sep=""), overwrite=T)
+    
+  }
+  
+}
