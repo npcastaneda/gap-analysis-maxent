@@ -133,9 +133,9 @@ priTable <- function (crop_dir) {
     }
     table_base$FPS[which(table_base$TAXON==paste(spp))] <- fps
     
-    if (fps>=0 & fps<=3) {
+    if (fps>=0 & fps<=2.5) { # New addition
       fpcat <- "HPS"
-    } else if (fps>3 & fps<=5) {
+    } else if (fps>2.5 & fps<=5) { # New addition
       fpcat <- "MPS"
     } else if (fps>5 & fps<=7.5) {
       fpcat <- "LPS"
