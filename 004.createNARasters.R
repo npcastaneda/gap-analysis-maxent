@@ -1,7 +1,7 @@
 require(rgdal)
 require(raster)
 require(maptools)
-gpclibPermit()
+gpclibPermit(); options(warn=-1)
 
 source(paste(src.dir,"/000.zipWrite.R",sep=""))
 source(paste(src.dir,"/000.zipRead.R",sep=""))
