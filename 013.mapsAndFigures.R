@@ -78,8 +78,71 @@ for(s in summ){
   dev.off()  
 }
 
-### Plot the CA50 vs Potential coverage
+# -------------------------------------------------------------------- #
+### Geographic representativeness score: GRS plot
+# -------------------------------------------------------------------- #
 
+prior <- read.csv(paste(crop_dir,"/maxent_modeling/summary-files/areas.csv",sep=""))
+prior[,c("DRSize","GBSize")] <- prior[,c("DRSize","GBSize")]/1000
+fit <- lm(prior$GBSize~prior$DRSize)
+lims <- c(min(prior$DRSize,prior$GBSize,na.rm=T),
+          max(prior$GBSize,prior$DRSize,na.rm=T)) # Problem 1
+
+#do the plot
+tiff(paste(crop_dir,"/figures/geographic_coverage.tif",sep=""),
+     res=300,pointsize=12,width=1500,height=1500,units="px",compression="lzw")
+
+  par(mar=c(5,5,1,1),cex=0.8)
+  plot(prior$DRSize,prior$GBSize,pch=20,cex=0.75,col="red",
+       xlim=c(lims[1],lims[2]+200), ylim=c(0,1050),
+       xaxs="i", yaxs="i", xlab="", ylab="")
+  title(xlab="Potential geographic coverage (sq-km * 1000)",
+        ylab="Genebank accessions CA50 (sq-km * 1000)",
+        col.lab="black", cex.lab=1.5, font.lab=2)
+
+  abline(0,1,lwd=0.75,lty=2)
+  abline(fit) # Problem 2
+  grid(lwd=0.75)
+
+dev.off()
+
+# -------------------------------------------------------------------- #
+### Environmental representativeness score: ERS
+# -------------------------------------------------------------------- #
+
+edist_info <- read.csv(paste(crop_dir,"/maxent_modeling/summary-files/edist_wwf.csv",sep=""))
+valid_info <- read.csv(paste(crop_dir,"/maxent_modeling/summary-files/modelsMets.csv",sep=""))
+valid_info <- valid_info[,c("Taxon","ValidModel")]
+colnames(valid_info) <- c("taxon","ValidModel")
+
+edist_info$coverage <- rep(NA, nrow(edist_info))
+
+edist_info$coverage[which(valid_info$ValidModel==1)] <- edist_info$DRDist.PC1[which(valid_info$ValidModel==1)]
+edist_info$coverage[which(valid_info$ValidModel==0)] <- edist_info$CHDist.PC1[which(valid_info$ValidModel==0)]
+
+lims <- c(min(edist_info$coverage, edist_info$GBDist.PC1,na.rm=T),
+          max(edist_info$coverage, edist_info$GBDist.PC1,na.rm=T))
+
+tiff(paste(crop_dir,"/figures/environmental_coverage.tif",sep=""),
+     res=300,pointsize=8,width=1500,height=1500,units="px",compression="lzw")
+
+  par(mar=c(6.5,6.5,1,1),cex=0.8)
+  plot(x=edist_info$coverage, y=edist_info$GBDist.PC1,
+       pch=20, col=2, cex=1,
+       xlim=c(lims[1], lims[2]+10), ylim=c(lims[1], lims[2]+10),
+       xaxs="i", yaxs="i", xlab="", ylab="")
+  grid()
+  title(ylab="Number of ecosystems represented in\ngenebank accessions CA50",
+        col.lab="black", cex.lab=1.5, font.lab=2)
+  mtext("Number of ecosystems represented in\npotential distribution coverage",
+        side=1, line=4.3, cex=1.1, font=2)
+  abline(0,1, lwd=0.75, lty=2)
+  fit <- lm(GBDist.PC1 ~ coverage, edist_info)
+  abline(fit)
+
+dev.off()
+
+# -------------------------------------------------------------------- #
 # prior <- read.csv(paste(crop_dir,"/maxent_modeling/summary-files/areas.csv",sep=""))
 # 
 # 
