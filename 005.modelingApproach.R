@@ -261,7 +261,7 @@ theEntireProcess <- function(spID, OSys, inputDir, j.size) {
 						}
 					}
 					
-          setwd(crop_dir)
+          setwd(inputDir)
 					#Run verification file
 					verFile <- paste(outFolder, "/ps-", spID, ".run", sep="")
 					opnFile <- file(verFile, open="w")
