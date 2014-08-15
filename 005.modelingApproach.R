@@ -255,11 +255,13 @@ theEntireProcess <- function(spID, OSys, inputDir, j.size) {
 						if (OSys == "linux") {
 							system(paste("gzip", fName))
 						} else {
-							system(paste("7z", "a", "-tgzip", paste(fName, ".gz", sep=""), fName),wait=T)
+						  setwd("C:/Program Files/7-Zip")
+						  system(paste('7z.exe a -tgzip "',gsub(paste(fName,".gz",sep=""),pattern="/",replacement="\\\\"),'" "',gsub(fName,pattern="/",replacement="\\\\"),'"',sep=''),wait=T)
 							file.remove(fName)
 						}
 					}
 					
+          setwd(crop_dir)
 					#Run verification file
 					verFile <- paste(outFolder, "/ps-", spID, ".run", sep="")
 					opnFile <- file(verFile, open="w")
