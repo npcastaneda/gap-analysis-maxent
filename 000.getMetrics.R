@@ -42,10 +42,10 @@ getMetrics <- function(crossValDir, foldSuffix, nFolds, outMetDir) {
     omRatesFile <- paste(crossValDir, "/", foldSuffix, "_", fold, "_omission.csv", sep="")
     omRatesData <- read.csv(omRatesFile)
     
-    trainPreds <- samPredData$Logistic.prediction[which(samPredData$Test.or.train == "train")]
+    trainPreds <- as.numeric(as.character(samPredData$Logistic.prediction[which(samPredData$Test.or.train == "train")]))
     matchTrain <- rep(1, times=length(trainPreds))
     
-    testPreds <- samPredData$Logistic.prediction[which(samPredData$Test.or.train == "test")]
+    testPreds <- as.numeric(as.character(samPredData$Logistic.prediction[which(samPredData$Test.or.train == "test")]))
     matchTest <- rep(1, times=length(testPreds))
     
     allPreds <- c(trainPreds, testPreds)
