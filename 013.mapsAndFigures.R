@@ -56,27 +56,37 @@ for(p in priorityLevels){
 
 bdir <- crop_dir
 dir <- paste(bdir,"/gap_richness", sep="")
+rasterList <- list.dirs(dir)[-1]
+path <- rasterList
 
-summ <- c("gap-richness-dpmax","gap-richness")
+# Gap-richness-dpmax
+fname <- "gap-richness-dpmax.asc.gz"
+rs <- lapply(rasterList,zipRead,fname); rs <- stack(rs)
 
-for(s in summ){
-  rasterList <- list.dirs(dir)[-1]
-  path = rasterList
-  fname = paste(s,".asc.gz",sep="")
-  rs <- lapply(rasterList,zipRead,fname)
-  
-  rs <- stack(rs)
-  
-  names(rs) <- c("a", "c", "b", "d")
-  rs <- rs[[order(names(rs))]]
-  
-  tiff(paste("./figures/all-",s,".tif",sep=""),
-       res=300,width=1500,height=1500,pointsize=5,units="px",compression="lzw")            
-  # Color blind safe options: PuOrTheme
-  mypalette <- rasterTheme(region=brewer.pal(n=9, "YlOrRd")) #Cool!
-  levelplot(rs, par.settings=mypalette, names.attr=c("HPS", "MPS", "LPS", "NFCR"))
-  dev.off()  
-}
+names(rs) <- c("a", "c", "b", "d")
+rs <- rs[[order(names(rs))]]
+
+tiff(paste("./figures/all-gap-richness-dpmax.tif",sep=""),res=300,width=1500,height=1500,pointsize=5,units="px",compression="lzw")
+# Color blind safe options: PuOrTheme
+mypalette <- rasterTheme(region=brewer.pal(n=9, "YlOrRd")) #Cool!
+levelplot(rs, par.settings=mypalette, names.attr=c("HPS", "MPS", "LPS", "NFCR"))
+dev.off()
+
+# Gap-richness
+fname <- "gap-richness.asc.gz"
+rs <- lapply(rasterList,zipRead,fname); rs <- stack(rs)
+
+names(rs) <- c("a", "c", "b", "d")
+rs <- rs[[order(names(rs))]]
+
+tiff(paste("./figures/all-gap-richness.tif",sep=""),res=300,width=1500,height=1500,pointsize=5,units="px",compression="lzw")
+# Color blind safe options: PuOrTheme
+mypalette <- rasterTheme(region=brewer.pal(n=9, "YlOrRd")) #Cool!
+levelplot(rs, par.settings=mypalette, names.attr=c("HPS", "MPS", "LPS", "NFCR"))
+dev.off()
+
+rm(rs)
+rm(fname)
 
 # -------------------------------------------------------------------- #
 ### Geographic representativeness score: GRS plot
