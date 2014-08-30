@@ -28,7 +28,7 @@ zipWrite <- function(rs, path, fname) {
 	nas <- -9999
 	
 	#Writing header
-	cat("ncols         ", as.character(nc), '\n', sep="", file=zz)
+  	cat("ncols         ", as.character(nc), '\n', sep="", file=zz)
     cat("nrows         ", as.character(nr), '\n', sep="", file=zz)
     cat("xllcorner     ", as.character(xll), '\n', sep="", file=zz)
     cat("yllcorner     ", as.character(yll), '\n', sep="", file=zz)
