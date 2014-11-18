@@ -15,8 +15,8 @@ stop("Warning: do not run the whole thing")
 
 crop <- "avena" #change according to the coded name
 #basic stuff - where is the code
-src.dir <- paste("/curie_data2/ncastaneda/gap-analysis/gap_",crop,"/_scripts",sep="") # !!! change accordingly !!!
-gap.dir <-"/curie_data2/ncastaneda/gap-analysis" # !!! change accordingly !!!
+src.dir <- paste("/curie_data/ncastaneda/gap-analysis/gap_",crop,"/_scripts",sep="") # !!! change accordingly !!!
+gap.dir <-"/curie_data/ncastaneda/gap-analysis" # !!! change accordingly !!!
 
 #crop details
 crop_dir <- paste(gap.dir,"/gap_",crop,sep="")
@@ -62,12 +62,12 @@ source(paste(src.dir,"/02.splitHG.R",sep=""))
 #== prepare masks ==#
 # source(paste(src.dir,"/000.prepareMasks.R",sep=""))
 #set climate dir
-env_dir <- "/curie_data2/ncastaneda/geodata/bio_2_5m" # !!! change accordingly !!!
+env_dir <- "/curie_data/ncastaneda/geodata/bio_2_5m" # !!! change accordingly !!!
 # msks <- paste(crop_dir,"/masks",sep="")
 # x <- createMasks(msks,env_dir)
 
 #== crop climate data to extent of interest==#
-eco_dir <- "/curie_data2/ncastaneda/geodata/wwf_eco_terr" # !!! change accordingly !!!
+eco_dir <- "/curie_data/ncastaneda/geodata/wwf_eco_terr" # !!! change accordingly !!!
 #source(paste(src.dir,"/000.ExtractVariables.R",sep=""))
 #x <- maskVariables(crop_dir,env_dir,eco_dir)
 
