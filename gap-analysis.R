@@ -6,9 +6,9 @@
 
 #-------------------------------------------------
 # Run outside linux, only when new code is available
-# cd /curie_data2/ncastaneda/code/gap-analysis-cwr/gap-analysis/gap-code
-# cp * /curie_data2/ncastaneda/gap-analysis/gap_[crop_name]/_scripts
-# cd /curie_data2/ncastaneda/gap-analysis
+# cd /curie_data/ncastaneda/code/gap-analysis-cwr/gap-analysis/gap-code
+# cp * /curie_data/ncastaneda/gap-analysis/gap_[crop_name]/_scripts
+# cd /curie_data/ncastaneda/gap-analysis
 #-------------------------------------------------
 
 stop("Warning: do not run the whole thing")
@@ -277,4 +277,4 @@ x <- maxpdist(crop_dir)
 source(paste(src.dir,"/013.mapsAndFigures.R",sep=""))
 
 #== ensuring access to folders ==#
-system(paste("chmod", "-R", "777", crop_dir))
+system(paste("chmod", "-R", "774", crop_dir))
